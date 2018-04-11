@@ -73,7 +73,7 @@ requires build dependencies.
 
 Some examples:
 
-- Look up a hostgroup and its linked hosts by name:
+- Look up a hostgroup and its linked hosts by name::
 
     ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.cli hostgroup get filter:name:'On-Demand Maintenance' 
     [
@@ -88,7 +88,7 @@ Some examples:
       }
     ]
 
-- Enumerate hosts in a hostgroup:
+- Enumerate hosts in a hostgroup::
 
     make build
     docker run --env-file .env --rm xibbaz:jq --jq '.[0].hosts | map({hostid, name})' hostgroup get filter:name:'On-Demand Maintenance' 
@@ -98,6 +98,7 @@ Some examples:
         "name": "needs-some-work.com"
       }
     ]
+
 
 TODO
 ----

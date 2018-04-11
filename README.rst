@@ -61,6 +61,44 @@ Non-Goals
   out common bits.
 
 
+CLI
+---
+
+There is a CLI mode to help support one-liners & simple shell scripts. Contrary
+to the "dont' be a thin api wrapper" goal, this mode is basically that with some
+integrated `jq` support for systems without nice ways of working with json.
+
+There are two flavors of the docker image, with or without `--jq` support which
+requires build dependencies.
+
+Some examples:
+
+- Look up a hostgroup and its linked hosts by name:
+
+    ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.cli hostgroup get filter:name:'On-Demand Maintenance' 
+    [
+      {
+        "groupid": "42",
+        "name": "On-Demand Maintenance",
+        "internal": 0,
+        "flags": 0,
+        "hosts": [
+          {...}
+        ]
+      }
+    ]
+
+- Enumerate hosts in a hostgroup:
+
+    make build
+    docker run --env-file .env --rm xibbaz:jq --jq '.[0].hosts | map({hostid, name})' hostgroup get filter:name:'On-Demand Maintenance' 
+    [
+      {
+        "hostid": "11878",
+        "name": "needs-some-work.com"
+      }
+    ]
+
 TODO
 ----
 

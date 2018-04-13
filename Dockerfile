@@ -10,4 +10,4 @@ ADD . /app/source
 
 ENV PYTHONPATH .:.pip
 
-ENTRYPOINT [ "python3", "-m", "xibbaz.cli"]
+ENTRYPOINT [ "python3", "-m", "xibbaz.main"]

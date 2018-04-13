@@ -8,6 +8,10 @@ class Item(ApiObject):
     https://www.xibbaz.com/documentation/3.4/manual/api/reference/item/object
     """
 
+    DEFAULT_SELECTS = ('Triggers', 'Graphs', 'Applications', 'DiscoveryRule', 'ItemDiscovery', 'Preprocessing')
+
+    RELATIONS = ('hosts', 'interfaces', 'triggers', 'graphs')
+
     # See `value_type` property
     TYPE_FLOAT = 0
     TYPE_CHAR  = 1
@@ -15,19 +19,10 @@ class Item(ApiObject):
     TYPE_INT   = 3
     TYPE_TEXT  = 4
 
-    def hosts(self):
-        """
-        List of `Hosts` with this item.
-        """
-        # Import here to avoid circular imports.
-        from .host import Host
-        return [Host(self._api, **host) for host in
-                self._api.response('host.get', itemids=self.id).get('result')]
 
-
-    def get_history(self, ts_from=None, ts_to=None, limit=10):
+    def history(self, ts_from=None, ts_to=None, limit=10):
         """
-        Return latest `limit` (ts, val) pairs from `ts_from` until `ts_to`.
+        `(ts, val)` for latest `limit` from `ts_from` until `ts_to`.
         """
         params = dict(
             output = 'extend',
@@ -45,10 +40,6 @@ class Item(ApiObject):
                 self._api.response('history.get', **params).get('result')]
 
 
-    def __repr__(self):
-        return "{}[{}]".format(self.__class__.__name__, self.key_.val)
-
-
     def _typed_value(self, val):
         """
         Return `val` with proper type based on this Item's `value_type`.
@@ -64,7 +55,6 @@ class Item(ApiObject):
         itemid = dict(
             doc = "ID of the item.",
             id = True,
-            kind = int,
             readonly = True,
         ),
         delay = dict(

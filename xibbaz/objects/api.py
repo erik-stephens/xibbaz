@@ -25,16 +25,62 @@ class ApiObject(object, metaclass=MetaApiObject):
     Base class for all Zabbix objects.
     """
 
+    DEFAULT_SELECTS = ()
+
+    @classmethod
+    def _zabbix_name(Class):
+        """
+        Name most commonly used in fields, docs, etc.
+        """
+        return Class.__name__.lower()
+
+
+    @classmethod
+    def _api_name(Class):
+        """
+        Name used for api endpoints.
+        """
+        return Class.__name__.lower()
+
+
+    @classmethod
+    def _id_field(Class, plural=False):
+        """
+        Zabbix field name for unique identifier.
+        """
+        return Class._zabbix_name() + 'id' + (plural and 's' or '')
+
+
+    @classmethod
+    def _name_field(Class):
+        """
+        Zabbix field name for descriptive name.
+        """
+        return 'name'
+
+
     @property
     def id(self):
         """
         Zabbix object's unique identifier.
         """
-        return self._id
+        return self._props[self._id_field()].val
+
+
+    @classmethod
+    def get(Class, api, **params):
+        """
+        `[ApiObject]` that match criteria in `params`.
+        """
+        for name in ['select' + i for i in Class.DEFAULT_SELECTS]:
+            if name not in params:
+                params[name] = 'extend'
+        result = api.response(Class._api_name() + '.get', **params).get('result')
+        return [Class(api, **i) for i in result]
 
 
     def __init__(self, api, **attrs):
-        self._id = None
+        # self._id = None
         self._api = api
         self._props = dict()
         for name in attrs:
@@ -42,8 +88,8 @@ class ApiObject(object, metaclass=MetaApiObject):
                 pass # TODO: log warning?
             else:
                 spec = self.PROPS[name]
-                if spec.get('id'):
-                    self._id = attrs[name]
+                # if spec.get('id'):
+                #     self._id = attrs[name]
                 prop = Property(
                     name = name,
                     val = attrs[name],
@@ -59,9 +105,48 @@ class ApiObject(object, metaclass=MetaApiObject):
 
     def _process_refs(self, attrs):
         """
-        A hook to process object-specific references.
+        Give references to other ApiObjects the xibbaz treatment.
         """
-        pass
+        # NOTES:
+        # - Import here to avoid circular imports.
+        # - When selectFoo=False, there may be Foo's in the response but only the ids or a count.
+        # - There's a lot of common bits could factor out here but not deemed
+        #   worth the extra layers of abstraction / indirection.
+
+        if isinstance(attrs.get('hosts'), list):
+            from .host import Host
+            self._hosts = []
+            for host in attrs['hosts']:
+                if 'name' in host:
+                    self._hosts.append(Host(self._api, **host))
+
+        if isinstance(attrs.get('groups'), list):
+            from .group import Group
+            self._groups = []
+            for group in attrs['groups']:
+                if 'name' in group:
+                    self._groups.append(Group(self._api, **group))
+
+        if isinstance(attrs.get('templates'), list):
+            from .template import Template
+            self._templates = []
+            for template in attrs['templates']:
+                if 'name' in template:
+                    self._templates.append(Template(self._api, **template))
+
+        if isinstance(attrs.get('items'), list):
+            from .item import Item
+            self._items = []
+            for item in attrs['items']:
+                if 'name' in item:
+                    self._items.append(Item(self._api, **item))
+
+        if isinstance(attrs.get('triggers'), list):
+            from .trigger import Trigger
+            self._triggers = []
+            for trigger in attrs['triggers']:
+                if 'description' in trigger:
+                    self._triggers.append(Trigger(self._api, **trigger))
 
 
     def __unicode__(self):
@@ -72,9 +157,10 @@ class ApiObject(object, metaclass=MetaApiObject):
 
     def __repr__(self):
         s = self.id
-        if 'name' in self._props:
-            s = self.name.val
-        return "{}={}".format(self.__class__.__name__, s)
+        if self._name_field() in self._props:
+            s += ":{}".format(self._props[self._name_field()].val)
+        return s
+
 
     def json(self):
         """
@@ -87,7 +173,11 @@ class ApiObject(object, metaclass=MetaApiObject):
                 d[name] = prop.val.isoformat()
             else:
                 d[name] = prop.val
-
+        # Include any loaded relations.
+        for relation in self.RELATIONS:
+            objs = getattr(self, '_' + relation, None)
+            if objs is not None:
+                d[relation] = objs
         return d
 
 
@@ -103,10 +193,13 @@ class ApiObject(object, metaclass=MetaApiObject):
         Publish any changes to xibbaz.
         """
         params = dict()
-        params[self.ID_FIELD] = self.id
+        dirty = False
         for name, prop in self._props.items():
+            if self.PROPS[name].get('id'):
+                params[name] = self.id
             if prop.dirty:
                 params[name] = prop.val
+                dirty = True
         if dirty:
             self._api.response('update', params)
 
@@ -137,22 +230,77 @@ class ApiObject(object, metaclass=MetaApiObject):
               </tbody>
             </table>
         """
-        # rows = [
-        #     '<style>.rendered_html td { text-align: left };</style>',
-        #     '<style>.rendered_html th.dirty, .rendered_html th.readonly { text-align: center };</style>',
-        #     '<style>.rendered_html td.dirty, .rendered_html td.readonly { text-align: center; color: #f00; font-weight: bold };</style>',
-        #     '<table><thead><tr><th>Name</th><th>Value</th><th>Type</th><th>Dirty</th><th>Read-Only</th><th>Documentation</th></tr></thead><tbody>',
-        # ]
-        # for name in sorted(self._props):
-        #     prop = self._props[name]
-        #     val = prop.val
-        #     if prop.vals and val in prop.vals:
-        #         val = "{}: {}".format(val, prop.vals[val])
-        #     rows.append('<tr><td class="name">{}</td><td class="value">{}</td><td class="type">{}</td><td class="readonly">{}</td><td class="dirty">{}</td><td class="doc"><pre>{}</pre></td></tr>'.format(
-        #         name, val, prop.kind.__name__, prop.dirty and '*' or '', prop.readonly and '*' or '', prop.__doc__))
-        # rows.append('</tbody></table>')
-
         return html.format(rows='\n'.join([i._repr_html_row() for i in self._props.values()]))
+
+
+    @property
+    def hosts(self):
+        """
+        Linked Hosts.
+        """
+        if 'hosts' not in self.RELATIONS:
+            return None
+        if not hasattr(self, '_hosts'):
+            params = dict()
+            params[self._id_field(plural=True)] = self.id
+            self._hosts = self._api.hosts(**params)
+        return self._hosts
+
+
+    @property
+    def groups(self):
+        """
+        Linked Groups.
+        """
+        if 'groups' not in self.RELATIONS:
+            return None
+        if not hasattr(self, '_groups'):
+            params = dict()
+            params[self._id_field(plural=True)] = self.id
+            self._groups = self._api.groups(**params)
+        return self._groups
+
+
+    @property
+    def templates(self):
+        """
+        Linked Templates.
+        """
+        if 'templates' not in self.RELATIONS:
+            return None
+        if not hasattr(self, '_templates'):
+            params = dict()
+            params[self._id_field(plural=True)] = self.id
+            self._templates = self._api.templates(**params)
+        return self._templates
+
+
+    @property
+    def items(self):
+        """
+        Linked Items.
+        """
+        if 'items' not in self.RELATIONS:
+            return None
+        if not hasattr(self, '_items'):
+            params = dict()
+            params[self._id_field(plural=True)] = self.id
+            self._items = self._api.items(**params)
+        return self._items
+
+
+    @property
+    def triggers(self):
+        """
+        Linked Triggers.
+        """
+        if 'triggers' not in self.RELATIONS:
+            return None
+        if not hasattr(self, '_triggers'):
+            params = dict()
+            params[self._id_field(plural=True)] = self.id
+            self._triggers = self._api.triggers(**params)
+        return self._triggers
 
 
 class Property(object):
@@ -206,6 +354,7 @@ class Property(object):
         self._val = val
         self._dirty = True
 
+
     @property
     def dirty(self):
         """
@@ -232,16 +381,22 @@ class Property(object):
         self._dirty = False
 
 
+    def __format__(self, s):
+        return str(self).__format__(s)
+
+
     def __unicode__(self):
-        return u"{} [dirty={}, readonly={}]".format(self.val, self.dirty, self.readonly)
+        return repr(self)
 
 
     def __str__(self):
-        return str(self)
+        if self.vals is not None and self.val in self.vals:
+            return self.vals[self.val]
+        return str(self.val)
 
 
     def __repr__(self):
-        return str(self.val)
+        return u"{} [dirty={}, readonly={}]".format(self.val, self.dirty, self.readonly)
 
 
     def _repr_html_(self):

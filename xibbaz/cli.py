@@ -4,7 +4,7 @@ Thin CLI wrapper around zabbix api.
 Usage: COMMAND [options] <entity> <method> <params>...
 
 Arguments:
-  - entity: the kind of object to query (host, hostgroup, template)
+  - entity: the kind of object to query (host, group, template)
   - method: the api call/method/verb (eg get, update, massadd) - not all supported
   - params: the arguments to pass to entity's `get` api call.
 
@@ -19,15 +19,15 @@ Options:
 Refer to zabbix api documentation for details:
   - https://www.zabbix.com/documentation/3.4/manual/api
 """
+import json
+import os
+import sys
+from docopt import docopt
+from . import Api, objects
 
-if __name__ == '__main__':
-    from . import Api, objects
-    import json
-    import os
-    import sys
 
-    from docopt import docopt
-    opts = docopt(__doc__)
+def main(argv):
+    opts = docopt(__doc__, argv)
     entity = opts['<entity>']
     params = dict(i.split(':', 1) for i in opts['<params>'])
 
@@ -83,3 +83,7 @@ if __name__ == '__main__':
     if jq:
         result = jq.first([i.json() for i in result])
     json.dump(result, sys.stdout, indent=2, default=lambda i: i.json())
+
+
+if __name__ == '__main__':
+    main(sys.argv)

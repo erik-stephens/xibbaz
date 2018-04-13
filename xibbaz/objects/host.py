@@ -8,76 +8,17 @@ class Host(ApiObject):
     https://www.xibbaz.com/documentation/3.4/manual/api/reference/host/object
     """
 
-    @classmethod
-    def get(Class, api, **params):
-        """
-        Return `[Host]` that match criteria:
-        """
-        if 'selectGroups' not in params:
-            params['selectGroups'] = 'extend'
-        result = api.response('host.get', **params).get('result')
-        return [Class(api, **i) for i in result]
+    DEFAULT_SELECTS = ('Groups', 'Applications', 'Macros', 'Graphs', 'Screens')
 
-
-    def json(self):
-        """
-        Return all properties as a dict suitable for JSON.
-        """
-        # TODO: Handle circular references
-        d = super().json()
-        d['groups'] = {k: v.json() for k,v in self.groups.items()}
-        d['items'] = {k: v.json() for k,v in self.items.items()}
-        return d
-
-
-    def _process_refs(self, attrs):
-        # Import here to avoid circular imports.
-        from .hostgroup import HostGroup
-        self._groups = {}
-        if 'groups' in attrs:
-            for group in attrs['groups']:
-                # print('group:', group)
-                # TODO: What if selectGroups=False?  We only get {'groupid': '123'}.
-                if 'name' in group:
-                    self._groups[group['name']] = HostGroup(self._api, **group)
-        from .item import Item
-        self._items = {}
-        if 'items' in attrs:
-            for item in attrs['items']:
-                # print('item:', item)
-                # TODO: What if selectItems=False?  We only get {'itemid': '123'}.
-                if 'name' in item:
-                    self._items[item['name']] = Item(self._api, **item)
+    RELATIONS = ('groups', 'templates', 'items', 'triggers', 'screens', 'graphs')
 
 
     @property
-    def groups(self):
+    def problems(self):
         """
-        {name: HostGroup} of associated `HostGroups`.
+        `[Problem]` of current problem Events.
         """
-        return self._groups
-
-
-    @property
-    def items(self):
-        """
-        {key: Item} of associated `Items`.
-        """
-        from .item import Item
-        if self._items is None:
-            self._items = {}
-            for item in self._api.response('item.get', output='extend', hostids=self.id).get('result'):
-                self._items[item['key_']] = Item(self._api, **item)
-        return self._items
-
-
-    def triggers(self):
-        """
-        List of associated `Triggers`.
-        """
-        from .trigger import Trigger
-        return [Trigger(self._api, **trigger) for trigger in
-                self._api.response('trigger.get', output='extend', hostids=self.id).get('result')]
+        return self._api.problems(hostids=self.id)
 
 
     PROPS = dict(

@@ -93,13 +93,11 @@ class Api(object):
 
     def host(self, name_or_id):
         """
-        Return single `Host` by id or name.
+        `Host` by id or name.
         """
-        params = dict(
-            selectHostgroups = True
-        )
+        params = dict()
         if integerish(name_or_id):
-            params['filter'] = dict(id=str(name_or_id))
+            params['filter'] = dict(hostids=str(name_or_id))
         else:
             params['filter'] = dict(name=name_or_id)
         return one_only(self.hosts(**params))
@@ -112,29 +110,81 @@ class Api(object):
         return objects.Host.get(self, **params)
 
 
-    def host_group_create(self, name):
-        return objects.HostGroup.create(self, name)
+    def group_create(self, name):
+        return objects.Group.create(self, name)
 
 
-    def host_group(self, name_or_id):
+    def group(self, name_or_id):
         """
-        Return single `HostGroup` by id or name.
+        `Group` by id or name.
         """
-        params = dict(
-            selectHosts = True
-        )
+        params = dict()
         if integerish(name_or_id):
-            params['filter'] = dict(id=str(name_or_id))
+            params['filter'] = dict(groupids=str(name_or_id))
         else:
             params['filter'] = dict(name=name_or_id)
-        return one_only(self.host_groups(**params))
+        return one_only(self.groups(**params))
 
 
-    def host_groups(self, **params):
+    def groups(self, **params):
         """
-        Wrapper around `HostGroup.get`.
+        Wrapper around `Group.get`.
         """
-        return objects.HostGroup.get(self, **params)
+        return objects.Group.get(self, **params)
+
+
+    def item(self, name_or_id):
+        """
+        `Item` by id or name.
+        """
+        params = dict()
+        if integerish(name_or_id):
+            params['filter'] = dict(itemids=str(name_or_id))
+        else:
+            params['filter'] = dict(name=name_or_id)
+        return one_only(self.items(**params))
+
+
+    def items(self, **params):
+        """
+        Wrapper around `Item.get`.
+        """
+        return objects.Item.get(self, **params)
+
+
+    def trigger(self, id):
+        """
+        `Trigger` by id.
+        """
+        return one_only(self.triggers(triggerids=id))
+
+
+    def triggers(self, **params):
+        """
+        Wrapper around `Trigger.get`.
+        """
+        return objects.Trigger.get(self, **params)
+
+
+    def event(self, id):
+        """
+        `Event` by id.
+        """
+        return one_only(self.events(eventids=id))
+
+
+    def events(self, **params):
+        """
+        Wrapper around `Event.get`.
+        """
+        return objects.Event.get(self, **params)
+
+
+    def problems(self, **params):
+        """
+        Wrapper around `Problem.get`.
+        """
+        return objects.Problem.get(self, **params)
 
 
 def integerish(val):

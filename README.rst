@@ -91,7 +91,7 @@ Some examples:
 - Enumerate hosts in a hostgroup::
 
     make build
-    docker run --env-file .env --rm xibbaz:jq --jq '.[0].hosts | map({hostid, name})' hostgroup get filter:name:'On-Demand Maintenance' 
+    docker run --env-file .env --rm xibbaz:jq cli --jq '.[0].hosts | map({hostid, name})' hostgroup get filter:name:'On-Demand Maintenance' 
     [
       {
         "hostid": "11878",

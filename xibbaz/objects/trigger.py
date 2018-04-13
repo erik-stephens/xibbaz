@@ -8,21 +8,18 @@ class Trigger(ApiObject):
     https://www.xibbaz.com/documentation/3.4/manual/api/reference/trigger/object
     """
 
-    # @classmethod
-    # def by_name(C, api, name):
-    #     """
-    #     Return a new `Trigger` with matching `name`.
-    #     """
-    #     params = dict(
-    #         output = 'extend',
-    #         filter = dict(description=name),
-    #         selectItems = True,
-    #         selectTags = True,
-    #     )
-    #     result = api.response('trigger.get', **params).get('result')
-    #     if not result:
-    #         return None
-    #     return C(api, **result[0])
+    DEFAULT_SELECTS = ('Items', 'Functions', 'Dependencies', 'DiscoveryRule', 'LastEvent', 'Tags')
+
+    RELATIONS = ('hosts', 'groups')
+
+
+    @classmethod
+    def _name_field(self):
+        """
+        Zabbix field name for descriptive name.
+        """
+        return 'description'
+
 
     PROPS = dict(
         triggerid = dict(
@@ -106,7 +103,7 @@ class Trigger(ApiObject):
             kind = int,
             readonly = True,
             vals = {
-                0: 'OK (default)',
+                0: 'ok',
                 1: 'problem',
             },
         ),

@@ -27,18 +27,16 @@ Goals
 
   in favor of something like this::
 
-    group = api.host_group('Maintenance')
+    group = api.group('Maintenance')
     host = api.host('needs-work.com')
     group.add_hosts(host)
     for host in group.hosts.values():
         print('{} is in maintenance'.format(host))
 
-- Support ad hoc analysis.  Zabbix is great at collecting data and
-  triggering alerts, but makes it difficult to navigate the data.
-  Coupled with the likes of IPython Notebook & Pandas, it should be
-  easy to analyze and visual the data.  Even better, notebooks can be
-  saved and shared as a kind of dashboard or report, which can be
-  re-evaluated as needed or captured as a snapshot to PDF.
+- Be notebook friendly. Zabbix is great at collecting data and triggering
+  alerts, but makes it difficult to navigate the data. Coupled with the likes of
+  IPython Notebook & Pandas, it should be easy to analyze and visualize the
+  data. Notebooks can be shared, serve as dashboards, generate reports, etc.
 
 - Minimize server load and improve latency with aggressive caching of objects.
 
@@ -61,21 +59,31 @@ Non-Goals
   out common bits.
 
 
-CLI
----
+Scripts
+-------
 
-There is a CLI mode to help support one-liners & simple shell scripts. Contrary
-to the "dont' be a thin api wrapper" goal, this mode is basically that with some
-integrated `jq` support for systems without nice ways of working with json.
+  Authentication
+  --------------
+  Environment variables are used for your zabbix api credentials:
 
-There are two flavors of the docker image, with or without `--jq` support which
-requires build dependencies.
+  - ZABBIX_API: the base url for your zabbix server's api
+  - ZABBIX_USER: defaults to `USER` from environment
+  - ZABBIX_PASS: defaults to using keyring('zabbix-api', ZABBIX_USER)
 
-Some examples:
+  cli
+  ---
+  There is a `cli` script to help support one-liners & simple shell scripts.
+  Contrary to the "dont' be a thin api wrapper" goal, this script is basically
+  that with some integrated `jq` support for systems without good json support.
 
-- Look up a hostgroup and its linked hosts by name::
+  There are two flavors of the docker image, with or without `--jq` support which
+  requires build dependencies.
 
-    ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.cli hostgroup get filter:name:'On-Demand Maintenance' 
+  Some examples:
+
+  - Look up a group and its linked hosts by name::
+
+    ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.cli group get filter:name:'On-Demand Maintenance'
     [
       {
         "groupid": "42",
@@ -88,10 +96,10 @@ Some examples:
       }
     ]
 
-- Enumerate hosts in a hostgroup::
+  - Enumerate hosts in a group::
 
     make build
-    docker run --env-file .env --rm xibbaz:jq cli --jq '.[0].hosts | map({hostid, name})' hostgroup get filter:name:'On-Demand Maintenance' 
+    docker run --env-file .env --rm xibbaz:jq cli --jq '.[0].hosts | map({hostid, name})' group get filter:name:'On-Demand Maintenance'
     [
       {
         "hostid": "11878",
@@ -99,15 +107,22 @@ Some examples:
       }
     ]
 
+  triggers
+  --------
+
+  Reports trigger status for a host (see `--help` for details). Example::
+
+    ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.triggers -v -p warn some-host
+    problem   high      some-host     Zabbix agent on some-host is unreachable for 5 minutes
+    ok        average   some-host     some-host is unavailable by ICMP
+    ok        average   some-host     SSH service is down on some-host
+
 
 TODO
 ----
 
-- Template [un]linking on service install & remove.
 - ACK's for a trigger so an operator can quickly see history & remediations.
-- Current active trigger list.
 - Noisy triggers
-- Current active triggered host list.
 - Noisy hosts
 
 

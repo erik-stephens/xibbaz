@@ -52,7 +52,7 @@ class ApiObject(object, metaclass=MetaApiObject):
 
 
     @classmethod
-    def _name_field(Class):
+    def _text_field(Class):
         """
         Zabbix field name for descriptive name.
         """
@@ -65,6 +65,14 @@ class ApiObject(object, metaclass=MetaApiObject):
         Zabbix object's unique identifier.
         """
         return self._props[self._id_field()].val
+
+
+    @property
+    def text(self):
+        """
+        Best textual description.
+        """
+        return self._props[self._text_field()].val
 
 
     @classmethod
@@ -157,9 +165,12 @@ class ApiObject(object, metaclass=MetaApiObject):
 
     def __repr__(self):
         s = self.id
-        if self._name_field() in self._props:
-            s += ":{}".format(self._props[self._name_field()].val)
+        if self._text_field() in self._props:
+            s += ":{}".format(self._props[self._text_field()].val)
         return s
+
+    def __format__(self, s):
+        return self._props[self._text_field()].val.__format__(s)
 
 
     def json(self):
@@ -396,7 +407,12 @@ class Property(object):
 
 
     def __repr__(self):
-        return u"{} [dirty={}, readonly={}]".format(self.val, self.dirty, self.readonly)
+        notes = [self.kind.__name__]
+        if self.readonly:
+            notes.append('read-only')
+        if self.dirty:
+            notes.append('dirty')
+        return u"{} [{}]".format(self.val, ', '.join(notes))
 
 
     def _repr_html_(self):

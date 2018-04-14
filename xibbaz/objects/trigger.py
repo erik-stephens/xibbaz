@@ -14,10 +14,7 @@ class Trigger(ApiObject):
 
 
     @classmethod
-    def _name_field(self):
-        """
-        Zabbix field name for descriptive name.
-        """
+    def _text_field(self):
         return 'description'
 
 

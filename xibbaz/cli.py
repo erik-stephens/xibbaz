@@ -9,8 +9,8 @@ Arguments:
   - params: the arguments to pass to entity's `get` api call.
 
 Options:
-  -v, --verbosity LEVEL
-    trace, debug, info, warn, error, fatal [default: warn]
+  -d, --debug
+    Show debug output.
   --jq SCRIPT
     Use embedded jq library to process results.
   --api URL
@@ -20,16 +20,16 @@ Refer to zabbix api documentation for details:
   - https://www.zabbix.com/documentation/3.4/manual/api
 """
 import json
-import os
 import sys
 from docopt import docopt
-from . import Api, objects
+from . import login, objects
 
 
 def main(argv):
     opts = docopt(__doc__, argv)
     entity = opts['<entity>']
     params = dict(i.split(':', 1) for i in opts['<params>'])
+    debug = opts['--debug']
 
     jq = None
     if opts['--jq']:
@@ -40,17 +40,7 @@ def main(argv):
             sys.exit(1)
         jq = pyjq.compile(opts['--jq'])
 
-    api = Api(opts.get('--api') or os.environ['ZABBIX_API'])
-    if 'ZABBIX_USER' in os.environ:
-        username = os.environ['ZABBIX_USER']
-    else:
-        username = os.environ['USER']
-    if 'ZABBIX_PASS' in os.environ:
-        password = os.environ['ZABBIX_PASS']
-    else:
-        import keyring
-        password = keyring.get_password('zabbix-api', username)
-    api.login(username, password)
+    api = login(opts.get('--api'))
 
     if 'filter' in params:
         params['filter'] = dict(i.split(':', 1) for i in params['filter'].split('+'))
@@ -69,8 +59,11 @@ def main(argv):
         params['searchByAny'] = False
     if 'startSearch' not in params:
         params['startSearch'] = True
-    # print('params:', params)
-    # sys.exit(1)
+    if debug:
+        print('DEBUG params:')
+        json.dump(params, sys.stdout, indent=2)
+        print('')
+
     Entity = getattr(objects, entity, None)
     if not Entity:
         print('unknown entity:', entity, file=sys.stderr)
@@ -86,4 +79,4 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main(sys.argv[1:])

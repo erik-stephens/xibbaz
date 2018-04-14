@@ -1,29 +1,40 @@
+#! /usr/bin/env python3
 """
-Report trigger status for a host.  Number of problems is exit code.
+Report trigger status.  Number of problems is exit code.
 
 Usage: COMMAND [options] [<host>]
 
 Arguments:
-  - host: zabbix hostname to report problems for (defaults to `hostname`)
+  - host: zabbix hostname to report problems for.  All hosts by default.
 
 Options:
   -v, --verbose
-    Report status of all checks, not just current problems
+    Report status of all checks, not just current problems, but only when a
+    host is given.
   -p, --min-priority LEVEL
     Report these triggers only: all, info, warn, avg, high, disaster [default: info]
   --api URL
     Zabbix API endpoint (defaults to ZABBIX_API from environment)
 """
-import os
 import socket
 import sys
 from docopt import docopt
-from . import Api, objects
+from . import login, objects
+
+
+def description(trigger):
+    """
+    Substitute some important macros, namely `{HOST.NAME}`.
+    """
+    s = trigger.description.val
+    if trigger.hosts:
+        s = s.replace('{HOST.NAME}', ', '.join(i.text for i in trigger.hosts))
+    return s
 
 
 def main(argv):
     opts = docopt(__doc__, argv)
-    hostname = opts.get('<host>') or socket.gethostname()
+    hostname = opts.get('<host>')
     verbose = opts.get('--verbose')
     min_priority = dict(
         all = 0,
@@ -37,29 +48,25 @@ def main(argv):
         print('invalid --min-priority', file=sys.stderr)
         sys.exit(1)
 
-    api = Api(opts.get('--api') or os.environ['ZABBIX_API'])
-    if 'ZABBIX_USER' in os.environ:
-        username = os.environ['ZABBIX_USER']
+    api = login(opts.get('--api'))
+    params = dict()
+    if hostname:
+        host = api.host(hostname)
+        params['hostids'] = [host.id]
     else:
-        username = os.environ['USER']
-    if 'ZABBIX_PASS' in os.environ:
-        password = os.environ['ZABBIX_PASS']
-    else:
-        import keyring
-        password = keyring.get_password('zabbix-api', username)
-    api.login(username, password)
-
-    host = api.host(hostname)
+        params['only_true'] = 1
+        params['active'] = 1
+        params['monitored'] = 1
     status = 0
-    for t in sorted(host.triggers, key = lambda i: (i.value.val, i.priority.val), reverse=True):
+    for t in sorted(api.triggers(**params), key = lambda i: (i.value.val, i.priority.val), reverse=True):
         if t.priority.val >= min_priority:
             problematic = t.value.val > 0
             if problematic:
                 status += 1
             if verbose or problematic:
-                print("{:8}  {:12}  {}".format(t.value, t.priority, t.description))
+                print("{:8}  {:12}  {:25}  {}".format(t.value, t.priority, t.hosts[0], description(t)))
     sys.exit(status)
 
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main(sys.argv[1:])

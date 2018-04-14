@@ -12,6 +12,29 @@ class Template(ApiObject):
 
     RELATIONS = ('hosts', 'groups', 'items', 'triggers')
 
+
+    def add_hosts(self, *hosts):
+        """
+        Add one or more Hosts to this Template.
+        """
+        params = dict(
+            templates = [dict(templateid = self.id)],
+            hosts = [dict(hostid = i.id) for i in hosts],
+        )
+        return self._api.response('template.massadd', **params).get('result')
+
+
+    def remove_hosts(self, *hosts):
+        """
+        Remove one or more Hosts from this Template.
+        """
+        params = dict(
+            templateids = [self.id],
+            hostids = [i.id for i in hosts],
+        )
+        return self._api.response('template.massremove', **params).get('result')
+
+
     PROPS = dict(
         templateid = dict(
             doc = "ID of the template.",

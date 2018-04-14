@@ -133,6 +133,25 @@ class Api(object):
         return objects.Group.get(self, **params)
 
 
+    def template(self, name_or_id):
+        """
+        `Template` by id or name.
+        """
+        params = dict()
+        if integerish(name_or_id):
+            params['filter'] = dict(templateids=str(name_or_id))
+        else:
+            params['filter'] = dict(name=name_or_id)
+        return one_only(self.templates(**params))
+
+
+    def templates(self, **params):
+        """
+        Wrapper around `Template.get`.
+        """
+        return objects.Template.get(self, **params)
+
+
     def item(self, name_or_id):
         """
         `Item` by id or name.

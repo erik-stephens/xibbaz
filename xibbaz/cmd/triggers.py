@@ -16,10 +16,7 @@ Options:
   --api URL
     Zabbix API endpoint (defaults to ZABBIX_API from environment)
 """
-import socket
-import sys
-from docopt import docopt
-from . import login, objects
+from . import *
 
 
 def description(trigger):

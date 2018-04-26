@@ -19,10 +19,8 @@ Options:
 Refer to zabbix api documentation for details:
   - https://www.zabbix.com/documentation/3.4/manual/api
 """
+from . import *
 import json
-import sys
-from docopt import docopt
-from . import login, objects
 
 
 def main(argv):

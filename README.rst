@@ -70,6 +70,13 @@ Scripts
   - ZABBIX_USER: defaults to `USER` from environment
   - ZABBIX_PASS: defaults to using keyring('zabbix-api', ZABBIX_USER)
 
+  group
+  -----
+
+  Add hosts to a group::
+
+    ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.main group add 'On-Demand Maintenance' needs-some-work.com
+
   cli
   ---
   There is a `cli` script to help support one-liners & simple shell scripts.
@@ -83,7 +90,7 @@ Scripts
 
   - Look up a group and its linked hosts by name::
 
-    ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.cli group get filter:name:'On-Demand Maintenance'
+    ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.main cli group get filter:name:'On-Demand Maintenance'
     [
       {
         "groupid": "42",
@@ -99,7 +106,7 @@ Scripts
   - Enumerate hosts in a group::
 
     make build
-    docker run --env-file .env --rm xibbaz:jq cli --jq '.[0].hosts | map({hostid, name})' group get filter:name:'On-Demand Maintenance'
+    docker run --env-file .env --rm xibbaz:jq cli --jq 'first | .hosts | map({hostid, name})' group get filter:name:'On-Demand Maintenance'
     [
       {
         "hostid": "11878",
@@ -112,7 +119,7 @@ Scripts
 
   Reports trigger status for a host (see `--help` for details). Example::
 
-    ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.triggers -v -p warn some-host
+    ZABBIX_API=https://zabbix PYTHONPATH=.:.pip python3 -m xibbaz.main triggers -v -p warn some-host
     problem   high      some-host     Zabbix agent on some-host is unreachable for 5 minutes
     ok        average   some-host     some-host is unavailable by ICMP
     ok        average   some-host     SSH service is down on some-host

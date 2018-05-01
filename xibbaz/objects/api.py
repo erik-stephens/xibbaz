@@ -188,7 +188,7 @@ class ApiObject(object, metaclass=MetaApiObject):
         for relation in self.RELATIONS:
             objs = getattr(self, '_' + relation, None)
             if objs is not None:
-                d[relation] = objs
+                d[relation] = [i.json() for i in objs]
         return d
 
 

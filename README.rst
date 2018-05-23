@@ -59,6 +59,24 @@ Non-Goals
   out common bits.
 
 
+How to REPL
+-----------
+
+An example of how to bootstrap in interactive session::
+
+    $ cat ixibbaz.py
+    import xibbaz
+    import keyring
+    import os
+    api = xibbaz.Api('https://zabbix.yours')
+    username = os.environ.get('ZABBIX_USER', os.environ.get('USER'))
+    api.login(username, keyring.get_password('zabbix-api', username))
+    api.groups?
+    from xibbaz import objects
+    objects.Group?
+
+    $ python3 -m IPython -i ixibbaz.py
+
 Scripts
 -------
 

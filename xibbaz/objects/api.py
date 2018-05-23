@@ -87,6 +87,13 @@ class ApiObject(object, metaclass=MetaApiObject):
         return [Class(api, **i) for i in result]
 
 
+    def delete(self):
+        """
+        CAUTION: Remove this object from zabbix.
+        """
+        return self._api.response(self._api_name() + '.delete', _params=[self.id])
+
+
     def __init__(self, api, **attrs):
         # self._id = None
         self._api = api

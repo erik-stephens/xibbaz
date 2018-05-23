@@ -64,10 +64,12 @@ class Api(object):
         """
         Get "raw" response from zabbix server.
         """
+        # Some endpoints like delete accept a simple list for params. Using
+        # this kludgy _params hack to avoid changing this method's signature.
         payload = dict(
             jsonrpc = '2.0',
             method = method,
-            params = params,
+            params = params.get('_params', params),
             id = self._id,
             auth = self._auth,
         )

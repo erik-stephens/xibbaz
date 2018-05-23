@@ -99,7 +99,7 @@ class Api(object):
         """
         params = dict()
         if integerish(name_or_id):
-            params['filter'] = dict(hostids=str(name_or_id))
+            params['hostids'] = str(name_or_id)
         else:
             params['filter'] = dict(name=name_or_id)
         return one_only(self.hosts(**params))
@@ -122,7 +122,7 @@ class Api(object):
         """
         params = dict()
         if integerish(name_or_id):
-            params['filter'] = dict(groupids=str(name_or_id))
+            params['groupids'] = str(name_or_id)
         else:
             params['filter'] = dict(name=name_or_id)
         return one_only(self.groups(**params))
@@ -141,7 +141,7 @@ class Api(object):
         """
         params = dict()
         if integerish(name_or_id):
-            params['filter'] = dict(templateids=str(name_or_id))
+            params['templateids'] = str(name_or_id)
         else:
             params['filter'] = dict(name=name_or_id)
         return one_only(self.templates(**params))
@@ -160,7 +160,7 @@ class Api(object):
         """
         params = dict()
         if integerish(name_or_id):
-            params['filter'] = dict(itemids=str(name_or_id))
+            params['itemids'] = str(name_or_id)
         else:
             params['filter'] = dict(name=name_or_id)
         return one_only(self.items(**params))

@@ -314,6 +314,20 @@ class ApiObject(object, metaclass=MetaApiObject):
         return self._triggers
 
 
+    @property
+    def applications(self):
+        """
+        Linked Applications.
+        """
+        if 'applications' not in self.RELATIONS:
+            return None
+        if not hasattr(self, '_applications'):
+            params = dict()
+            params[self._id_field(plural=True)] = self.id
+            self._applications = self._api.applications(**params)
+        return self._applications
+
+
 class Property(object):
     """
     Each attribute of an `ApiObject` is wrapped by this class.

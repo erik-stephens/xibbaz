@@ -10,7 +10,7 @@ class Template(ApiObject):
 
     DEFAULT_SELECTS = ('Groups', 'Items', 'Triggers', 'Macros')
 
-    RELATIONS = ('hosts', 'groups', 'items', 'triggers')
+    RELATIONS = ('hosts', 'groups', 'items', 'triggers', 'applications')
 
 
     def add_hosts(self, *hosts):
@@ -28,6 +28,7 @@ class Template(ApiObject):
         """
         Remove one or more Hosts from this Template.
         """
+        # TODO: How to "unlink & clear"?
         params = dict(
             templateids = [self.id],
             hostids = [i.id for i in hosts],

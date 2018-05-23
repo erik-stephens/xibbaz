@@ -11,6 +11,7 @@ from .problem import Problem
 from .template import Template
 from .trigger import Trigger
 from .item import Item
+from .application import Application
 
 # Export as all lowercase as well for compatibility with api.
 event = Event
@@ -21,6 +22,7 @@ maintenance = Maintenance
 problem = Problem
 template = Template
 trigger = Trigger
+application = Application
 
 __all__ = [
     'ApiObject',
@@ -32,4 +34,5 @@ __all__ = [
     'Problem', 'problem',
     'Template', 'template',
     'Trigger', 'trigger',
+    'Application', 'application',
 ]

@@ -10,7 +10,7 @@ class Host(ApiObject):
 
     DEFAULT_SELECTS = ('Groups', 'Applications', 'Macros', 'Graphs', 'Screens')
 
-    RELATIONS = ('groups', 'templates', 'items', 'triggers', 'screens', 'graphs')
+    RELATIONS = ('groups', 'templates', 'applications', 'items', 'triggers', 'screens', 'graphs')
 
 
     @property

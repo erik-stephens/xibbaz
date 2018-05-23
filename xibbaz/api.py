@@ -185,6 +185,25 @@ class Api(object):
         return objects.Trigger.get(self, **params)
 
 
+    def application(self, name_or_id):
+        """
+        `Application` by id or name.
+        """
+        params = dict()
+        if integerish(name_or_id):
+            params['applicationids'] = str(name_or_id)
+        else:
+            params['filter'] = dict(name=name_or_id)
+        return one_only(self.applications(**params))
+
+
+    def applications(self, **params):
+        """
+        Wrapper around `Application.get`.
+        """
+        return objects.Application.get(self, **params)
+
+
     def event(self, id):
         """
         `Event` by id.

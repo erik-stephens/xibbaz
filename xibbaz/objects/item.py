@@ -95,6 +95,8 @@ class Item(ApiObject):
                 15: 'calculated',
                 16: 'JMX agent',
                 17: 'SNMP trap',
+                18: 'Dependent item',
+                19: 'HTTP agent',
             },
         ),
         value_type = dict(
